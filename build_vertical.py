@@ -1,4 +1,5 @@
-# Вертикальная версия приглашения 9:16 из горизонтального макета src.png
+# Вертикальный фон приглашения 9:16 из горизонтального макета src.png.
+# В фоне: конфетти, логотип, «ПРИГЛАШЕНИЕ», «в Ричи Клуб!», сцена с альбатросом.
 import cv2, numpy as np
 im = cv2.imread('src.png')[:, :, ::-1].astype(np.float32)
 BG = np.array([205, 236, 252], np.float32)
@@ -76,20 +77,10 @@ paste_matte(matte('head', NAVY), NAVY, 380 + DX, 92)    # ПРИГЛАШЕНИЕ
 LINE = (84, 140, 178)
 def line(xa, xb, y): cv2.line(out, (xa, y), (xb, y), LINE, 3, cv2.LINE_AA)
 
-line(120 + DX + 10, 1490, 380)                          # строка имени
-BY = 430
-for k in ('b1', 'b2', 'b3', 'b4'):
-    y0, y1, x0, x1 = R[k]
-    paste_matte(matte(k, NAVY), NAVY, x0 + DX, BY + (y0 - 312))
-DY = BY + 500 + 35                                      # дата/время
-paste_matte(matte('dl', NAVY), NAVY, 120 + DX, DY)
-paste_matte(matte('tl', NAVY), NAVY, 120 + DX, DY + 125)
-line(470, 1490, DY + 92); line(470, 1490, DY + 217)
-PY = DY + 270
-paste_matte(matte('place', GREY), GREY, 120 + DX, PY)
-paste_matte(matte('heart', GREEN), GREEN, 120 + DX, PY + 140)
-print('date label y', DY, 'place y', PY, 'heart end', PY + 330, 'scene y', SY)
-
+# Остальной текст рисует страница (index.html). Здесь только «в Ричи Клуб!»:
+# в исходнике базовая линия ≈ 775, верх области 672 → смещение 103
+CLUB_BASE = 900
+paste_matte(matte('b4', NAVY), NAVY, 120 + DX, CLUB_BASE - 103)
 res = np.clip(out, 0, 255).astype(np.uint8)[:, :, ::-1]
-cv2.imwrite('card_v.jpg', res, [cv2.IMWRITE_JPEG_QUALITY, 90])
+cv2.imwrite('card_v2.jpg', res, [cv2.IMWRITE_JPEG_QUALITY, 90])
 cv2.imwrite('/private/tmp/claude-501/-Users-user-Desktop--------------/25c2935c-434c-4b0b-a4d2-af8c05f88adb/scratchpad/v.png', cv2.resize(res, (600, 1066), interpolation=cv2.INTER_AREA))
