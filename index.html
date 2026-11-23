@@ -48,6 +48,8 @@
     outline:none;transition:border-color .15s;
   }
   input:focus{border-color:var(--blue)}
+  input[type=date]{-webkit-appearance:none;appearance:none;min-height:50px;display:block;cursor:pointer}
+  input[type=date]::-webkit-date-and-time-value{text-align:left}
   .row{display:grid;grid-template-columns:1.6fr 1fr;gap:10px}
   @media (min-width:900px){.row{grid-template-columns:1fr}}
   button{
@@ -83,11 +85,11 @@
       <div class="row">
         <div class="field">
           <label for="date">Дата</label>
-          <input id="date" maxlength="28" autocomplete="off" placeholder="29 ноября, суббота">
+          <input id="date" type="date" autocomplete="off">
         </div>
         <div class="field">
           <label for="time">Время</label>
-          <input id="time" maxlength="20" autocomplete="off" placeholder="15:00">
+          <input id="time" maxlength="5" inputmode="numeric" autocomplete="off" placeholder="15:00">
         </div>
       </div>
 
@@ -98,7 +100,7 @@
       <div class="msg" id="msg"></div>
 
       <div class="tips">
-        <b>Как отправить нескольким гостям.</b> Дату и время впишите один раз. Для каждого гостя меняйте только имя и снова нажимайте «Отправить».<br><br>
+        <b>Как отправить нескольким гостям.</b> Дату и время укажите один раз. Для каждого гостя меняйте только имя и снова нажимайте «Отправить».<br><br>
         <b>Если кнопка «Отправить» не сработала,</b> откройте ссылку в обычном браузере (в Telegram и MAX: меню ⋯ → «Открыть в браузере») или нажмите «Сохранить картинку» и отправьте её как фото.
       </div>
     </div>
@@ -148,7 +150,7 @@
   function render(){
     ctx.drawImage(bg, 0, 0, W, H);
     drawText(inputs.name.value, SLOTS.name);
-    drawText(inputs.date.value, SLOTS.date);
+    drawText(dateText(), SLOTS.date);
     drawText(inputs.time.value, SLOTS.time);
   }
 
@@ -181,13 +183,41 @@
     msg.textContent = t;
   }
   function check(){
-    if (!inputs.date.value.trim() || !inputs.time.value.trim()){
-      say('Впишите дату и время.', true);
-      (inputs.date.value.trim() ? inputs.time : inputs.date).focus();
-      return false;
+    if (!inputs.date.value){
+      say('Выберите дату.', true); inputs.date.focus(); return false;
+    }
+    if (!/^([01]?\d|2[0-3]):[0-5]\d$/.test(inputs.time.value)){
+      say('Впишите время, например 15:00.', true); inputs.time.focus(); return false;
     }
     return true;
   }
+
+  // «2026-11-29» → «29 ноября, суббота»
+  function dateText(){
+    var v = inputs.date.value;
+    if (!v) return '';
+    var p = v.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]);
+    return d.toLocaleDateString('ru-RU', {day: 'numeric', month: 'long'}) + ', ' +
+           d.toLocaleDateString('ru-RU', {weekday: 'long'});
+  }
+
+  // Время: только цифры, двоеточие ставится само (1200 → 12:00, 930 → 9:30)
+  function maskTime(){
+    var d = inputs.time.value.replace(/\D/g, '');
+    var hLen = (d[0] > '2') ? 1 : 2;
+    d = d.slice(0, hLen + 2);
+    inputs.time.value = d.length > hLen ? d.slice(0, hLen) + ':' + d.slice(hLen) : d;
+  }
+  inputs.time.addEventListener('input', maskTime);
+
+  // Календарь открывается по нажатию на всё поле
+  inputs.date.addEventListener('click', function(){
+    try { if (inputs.date.showPicker) inputs.date.showPicker(); } catch(e){}
+  });
+  (function(){
+    var t = new Date(), m = String(t.getMonth() + 1).padStart(2, '0'), dd = String(t.getDate()).padStart(2, '0');
+    inputs.date.min = t.getFullYear() + '-' + m + '-' + dd;
+  })();
 
   function download(blob){
     var a = document.createElement('a');
@@ -251,6 +281,7 @@
   }
   try {
     var st = JSON.parse(localStorage.getItem('richiInvite') || 'null');
+    if (st && !/^\d{4}-\d{2}-\d{2}$/.test(st.d || '')) st.d = '';
     if (st){ inputs.date.value = st.d || ''; inputs.time.value = st.t || ''; }
   } catch(e){}
 
