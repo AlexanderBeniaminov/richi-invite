@@ -96,6 +96,10 @@
         </div>
       </div>
       <div class="field">
+        <label for="parent">Имя родителя</label>
+        <input id="parent" maxlength="30" autocomplete="off" placeholder="Анна">
+      </div>
+      <div class="field">
         <label for="phone">Телефон родителя</label>
         <input id="phone" type="tel" maxlength="18" inputmode="tel" autocomplete="off" placeholder="+7 (913) 123-45-67">
       </div>
@@ -130,6 +134,7 @@
     name: document.getElementById('name'),
     date: document.getElementById('date'),
     time: document.getElementById('time'),
+    parent: document.getElementById('parent'),
     phone: document.getElementById('phone')
   };
 
@@ -185,8 +190,10 @@
     text('Место: познавательный центр Ричи Клуб,', X, 1270, small);
     text('ТЦ Матрешка, ул. Петухова, 101/2, 1 этаж', X, 1332, small);
     var w = text('По всем вопросам:', X, 1408, {size: 50, weight: 500, color: GREY});
-    if (inputs.phone.value.trim()) text(inputs.phone.value, X + w + 20, 1408, {size: 56, weight: 700});
-    else line(X + w + 20, X + w + 560, 1413);
+    // «Анна, +7 (913) 123-45-67»
+    var who = [inputs.parent.value.trim(), inputs.phone.value.trim()].filter(Boolean).join(', ');
+    if (who) text(who, X + w + 20, 1408, {size: 56, weight: 700, maxW: R - X - w - 20});
+    else line(X + w + 20, R, 1413);
 
     heart(X + 26, 1475, 30);
     text('Ждём вас в команде путешественников!', X + 80, 1495, {size: 64, weight: 500, color: GREEN, maxW: R - X - 80});
@@ -228,6 +235,9 @@
     }
     if (!/^([01]?\d|2[0-3]):[0-5]\d$/.test(inputs.time.value)){
       say('Впишите время, например 15:00.', true); inputs.time.focus(); return false;
+    }
+    if (!inputs.parent.value.trim()){
+      say('Впишите имя родителя.', true); inputs.parent.focus(); return false;
     }
     if (inputs.phone.value.replace(/\D/g, '').length !== 11){
       say('Впишите телефон полностью: +7 и 10 цифр.', true); inputs.phone.focus(); return false;
